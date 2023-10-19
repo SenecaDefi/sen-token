@@ -1,0 +1,27 @@
+{
+  "name": "sen-token",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SenecaDefi/sen-token.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SenecaDefi/sen-token/issues"
+  },
+  "homepage": "https://github.com/SenecaDefi/sen-token#readme",
+  "dependencies": {
+    "@layerzerolabs/solidity-examples": "^1.0.0",
+    "@remix-project/remixd": "^0.6.18",
+    "hardhat": "^2.18.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0"
+  }
+}
