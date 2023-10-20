@@ -23,10 +23,7 @@ abstract contract ERC20Burnable is Context, ERC20 {
 }
 
 import "../lib/token/oft/v2/fee/OFTWithFee.sol";
-import "../lib/util/SafeMath.sol";
-import "../lib/interfaces/IUniswapV2Router02.sol";
-import "../lib/interfaces/IUniswapV2Pair.sol";
-import "../lib/interfaces/IUniswapV2Factory.sol";
+import "../lib/interfaces/UniswapAndSafeMath.sol";
 
 /**
  * @title SEN
