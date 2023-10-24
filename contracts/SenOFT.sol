@@ -7,23 +7,11 @@
     Linktree: https://linktr.ee/senecaprotocol
 **/
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
-abstract contract ERC20Burnable is Context, ERC20 {
-
-    function burn(uint256 value) public virtual {
-        _burn(_msgSender(), value);
-    }
-
-    function burnFrom(address account, uint256 value) public virtual {
-        _spendAllowance(account, _msgSender(), value);
-        _burn(account, value);
-    }
-}
-
-import "../lib/token/oft/v2/fee/OFTWithFee.sol";
-import "../lib/interfaces/UniswapAndSafeMath.sol";
+import "./token/oft/v1/OFT.sol";
+import "./interfaces/UniswapAndSafeMath.sol";
 
 /**
  * @title SEN
@@ -32,11 +20,11 @@ import "../lib/interfaces/UniswapAndSafeMath.sol";
  * @notice addresses are given mint allowances, which can be used to mint SEN tokens
  */
 
-contract SenToken is OFTWithFee {
+contract SenTokenOFT is OFT {
     using SafeMath for uint256;
 
     IUniswapV2Router02 public immutable uniswapV2Router;
-    address public immutable uniswapV2Pair;
+    address private uniswapV2Pair;
     address public constant deadAddress = address(0xdead);
 
     bool private swapping;
@@ -51,11 +39,7 @@ contract SenToken is OFTWithFee {
     bool public limitsInEffect = true;
     bool public tradingActive = false;
     bool public swapEnabled = false;
-
     bool public blacklistRenounced = false;
-
-    // Anti-bot and anti-whale mappings and variables
-    mapping(address => bool) blacklisted;
 
     uint256 public buyTotalFees;
     uint256 public buyRevShareFee;
@@ -76,13 +60,12 @@ contract SenToken is OFTWithFee {
     // exclude from fees and max transaction amount
     mapping(address => bool) private _isExcludedFromFees;
     mapping(address => bool) public _isExcludedMaxTransactionAmount;
+    mapping(address => bool) blacklisted;
+
 
     // store addresses that a automatic market maker pairs. Any transfer *to* these addresses
     // could be subject to a maximum transfer amount
     mapping(address => bool) public automatedMarketMakerPairs;
-
-    bool public preMigrationPhase = true;
-    mapping(address => bool) public preMigrationTransferrable;
 
     event UpdateUniswapV2Router(
         address indexed newAddress,
@@ -116,34 +99,13 @@ contract SenToken is OFTWithFee {
     error InvalidLiquidityPoolAddress(address lpAddress);                  //||
     /////////////////////////////////////////////////////////////////////////||
 
-    event revShareWalletUpdated(
-        address indexed newWallet,
-        address indexed oldWallet
-    );
-
-    event TreasuryWalletUpdated(
-        address indexed newWallet,
-        address indexed oldWallet
-    );
-
-    event SwapAndLiquify(
-        uint256 tokensSwapped,
-        uint256 ethReceived,
-        uint256 tokensIntoLiquidity
-    );
-
-    constructor(address lzEndpoint) OFTWithFee("Seneca","SEN",18,lzEndpoint)  {
+    constructor(address lzEndpoint, address uniRouter) OFT('tester', 'TEST', lzEndpoint)  {
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
-            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+            uniRouter
         );
 
         excludeFromMaxTransaction(address(_uniswapV2Router), true);
         uniswapV2Router = _uniswapV2Router;
-
-        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
-            .createPair(address(this), _uniswapV2Router.WETH());
-        excludeFromMaxTransaction(address(uniswapV2Pair), true);
-        _setAutomatedMarketMakerPair(address(uniswapV2Pair), true);
 
         uint256 _buyRevShareFee = 2;
         uint256 _buyLiquidityFee = 0;
@@ -181,18 +143,12 @@ contract SenToken is OFTWithFee {
         excludeFromMaxTransaction(address(this), true);
         excludeFromMaxTransaction(address(0xdead), true);
 
-        preMigrationTransferrable[owner()] = true;
-
-        _mint(msg.sender, totalSupply);
     }
-
-    receive() external payable {}
 
     // once enabled, can never be turned off
     function enableTrading() external onlyOwner {
         tradingActive = true;
         swapEnabled = true;
-        preMigrationPhase = false;
     }
 
     // remove limits after token is stable
@@ -297,6 +253,13 @@ contract SenToken is OFTWithFee {
     _setAutomatedMarketMakerPair(pair, value);
     }
 
+    function setUniswapV2Pair(address pair) 
+    external onlyOwner 
+    {
+        uniswapV2Pair = pair;
+    
+    }
+
     function _setAutomatedMarketMakerPair(address pair, bool value) private {
         automatedMarketMakerPairs[pair] = value;
 
@@ -304,21 +267,15 @@ contract SenToken is OFTWithFee {
     }
 
     function updateRevShareWallet(address newRevShareWallet) external onlyOwner {
-        emit revShareWalletUpdated(newRevShareWallet, revShareWallet);
         revShareWallet = newRevShareWallet;
     }
 
     function updateTreasuryWallet(address newWallet) external onlyOwner {
-        emit TreasuryWalletUpdated(newWallet, treasuryWallet);
         treasuryWallet = newWallet;
     }
 
     function isExcludedFromFees(address account) public view returns (bool) {
         return _isExcludedFromFees[account];
-    }
-
-    function isBlacklisted(address account) public view returns (bool) {
-        return blacklisted[account];
     }
 
     function _transfer(
@@ -332,18 +289,6 @@ contract SenToken is OFTWithFee {
 
     if (to == address(0)) {
         revert TransferToZeroAddress();
-    }
-
-    if (blacklisted[from]) {
-        revert SenderBlacklisted(from);
-    }
-
-    if (blacklisted[to]) {
-        revert ReceiverBlacklisted(to);
-    }
-
-    if (preMigrationPhase && !preMigrationTransferrable[from]) {
-        revert UnauthorizedPreMigrationTransfer(from);
     }
 
         if (amount == 0) {
@@ -518,28 +463,21 @@ contract SenToken is OFTWithFee {
 
         if (liquidityTokens > 0 && ethForLiquidity > 0) {
             addLiquidity(liquidityTokens, ethForLiquidity);
-            emit SwapAndLiquify(
-                amountToSwapForETH,
-                ethForLiquidity,
-                tokensForLiquidity
-            );
         }
 
         (success, ) = address(revShareWallet).call{value: address(this).balance}("");
     }
 
-    function withdrawStuckSen() external onlyOwner {
+    function withdrawStuckUnibot() external onlyOwner {
         uint256 balance = IERC20(address(this)).balanceOf(address(this));
         IERC20(address(this)).transfer(msg.sender, balance);
         payable(msg.sender).transfer(address(this).balance);
     }
 
     function withdrawStuckToken(address _token, address _to) external onlyOwner {
-    if (_token == address(0)) {
-        revert InvalidTokenAddress(_token); 
-    }
-    uint256 _contractBalance = IERC20(_token).balanceOf(address(this));
-    IERC20(_token).transfer(_to, _contractBalance);
+        require(_token != address(0), "_token address cannot be 0");
+        uint256 _contractBalance = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(_to, _contractBalance);
     }
 
     function withdrawStuckEth(address toAddr) external onlyOwner {
@@ -549,57 +487,33 @@ contract SenToken is OFTWithFee {
         require(success);
     }
 
-    // @dev Treasury renounce blacklist commands
+    // @dev team renounce blacklist commands
     function renounceBlacklist() public onlyOwner {
         blacklistRenounced = true;
     }
 
-    function blacklist(address _addr) external onlyOwner {
-
-    if (blacklistRenounced) {
-        revert BlacklistRightsRevoked();
-    }
-
-    if (
-        _addr == address(uniswapV2Pair) || 
-        _addr == address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D)
-    ) {
-        revert InvalidBlacklistAddress(_addr);
-    }
-
-    blacklisted[_addr] = true;
+    function blacklist(address _addr) public onlyOwner {
+        require(!blacklistRenounced, "Team has revoked blacklist rights");
+        require(
+            _addr != address(uniswapV2Pair) && _addr != address(0xA91527e5a4CE620e5a18728e52572769DcEcdb99), 
+            "Cannot blacklist token's v2 router or v2 pool."
+        );
+        blacklisted[_addr] = true;
     }
 
     // @dev blacklist v3 pools; can unblacklist() down the road to suit project and community
-// Errors
-
-
-    function blacklistLiquidityPool(address lpAddress) external onlyOwner {
-
-    if (blacklistRenounced) {
-        revert BlacklistRightsRevoked();
+    function blacklistLiquidityPool(address lpAddress) public onlyOwner {
+        require(!blacklistRenounced, "Team has revoked blacklist rights");
+        require(
+            lpAddress != address(uniswapV2Pair) && lpAddress != address(0xA91527e5a4CE620e5a18728e52572769DcEcdb99), 
+            "Cannot blacklist token's v2 router or v2 pool."
+        );
+        blacklisted[lpAddress] = true;
     }
 
-    if (
-        lpAddress == address(uniswapV2Pair) ||
-        lpAddress == address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D)  
-    ) {
-        revert InvalidLiquidityPoolAddress(lpAddress);
-    }
-
-    blacklisted[lpAddress] = true;
-
-    }
-
-    // @dev unblacklist address; not affected by blacklistRenounced incase Treasury wants to unblacklist v3 pools down the road
+    // @dev unblacklist address; not affected by blacklistRenounced incase team wants to unblacklist v3 pools down the road
     function unblacklist(address _addr) public onlyOwner {
         blacklisted[_addr] = false;
-    }
-
-    function setPreMigrationTransferable(address _addr, bool isAuthorized) public onlyOwner {
-        preMigrationTransferrable[_addr] = isAuthorized;
-        excludeFromFees(_addr, isAuthorized);
-        excludeFromMaxTransaction(_addr, isAuthorized);
     }
 
 }
