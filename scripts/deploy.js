@@ -8,11 +8,12 @@ const hre = require("hardhat");
 
 async function main() {
 
-  const sen = await hre.ethers.getContractFactory("SenToken");
+  const sen = await hre.ethers.getContractFactory("SenTokenOFT");
   console.log('Deploying Seneca...')
-  const Seneca = await sen.deploy('0xbfD2135BFfbb0B5378b56643c2Df8a87552Bfa23');
+  const Seneca = await sen.deploy('0xbfD2135BFfbb0B5378b56643c2Df8a87552Bfa23', '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D');
 
   await Seneca.deployed();
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere

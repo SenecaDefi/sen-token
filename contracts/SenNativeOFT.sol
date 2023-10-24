@@ -67,6 +67,9 @@ contract SenTokenNativeOFT is NativeOFT {
     // could be subject to a maximum transfer amount
     mapping(address => bool) public automatedMarketMakerPairs;
 
+    bool public preMigrationPhase = true;
+    mapping(address => bool) public preMigrationTransferrable;
+
     event UpdateUniswapV2Router(
         address indexed newAddress,
         address indexed oldAddress
@@ -142,6 +145,10 @@ contract SenTokenNativeOFT is NativeOFT {
         excludeFromMaxTransaction(owner(), true);
         excludeFromMaxTransaction(address(this), true);
         excludeFromMaxTransaction(address(0xdead), true);
+
+        if (block.chainid == 5) {
+            _mint(msg.sender, 1000000000000000000000000);
+        }
 
     }
 
@@ -283,13 +290,14 @@ contract SenTokenNativeOFT is NativeOFT {
         address to,
         uint256 amount
     ) internal override {
-    if (from == address(0)) {
-        revert TransferFromZeroAddress();
-    }
+        require(from != address(0), "ERC20: transfer from the zero address");
+        require(to != address(0), "ERC20: transfer to the zero address");
+        require(!blacklisted[from],"Sender blacklisted");
+        require(!blacklisted[to],"Receiver blacklisted");
 
-    if (to == address(0)) {
-        revert TransferToZeroAddress();
-    }
+        if (preMigrationPhase) {
+            require(preMigrationTransferrable[from], "Not authorized to transfer pre-migration.");
+        }
 
         if (amount == 0) {
             super._transfer(from, to, 0);
@@ -305,32 +313,40 @@ contract SenTokenNativeOFT is NativeOFT {
                 !swapping
             ) {
                 if (!tradingActive) {
-                    revert TradingNotActive(); 
+                    require(
+                        _isExcludedFromFees[from] || _isExcludedFromFees[to],
+                        "Trading is not active."
+                    );
                 }
 
                 //when buy
-                if (automatedMarketMakerPairs[from] && !_isExcludedMaxTransactionAmount[to]) {
-                    if (amount > maxTransactionAmount) {
-                        revert TransferExceedsLimit(amount, maxTransactionAmount);
-                    }
-                    if (amount + balanceOf(to) > maxWallet) {
-                        revert WalletLimitExceeded(amount + balanceOf(to), maxWallet); 
-                    }
-                    }
+                if (
+                    automatedMarketMakerPairs[from] &&
+                    !_isExcludedMaxTransactionAmount[to]
+                ) {
+                    require(
+                        amount <= maxTransactionAmount,
+                        "Buy transfer amount exceeds the maxTransactionAmount."
+                    );
+                    require(
+                        amount + balanceOf(to) <= maxWallet,
+                        "Max wallet exceeded"
+                    );
+                }
                 //when sell
                 else if (
-                    automatedMarketMakerPairs[to] && 
+                    automatedMarketMakerPairs[to] &&
                     !_isExcludedMaxTransactionAmount[from]
                 ) {
-                    if (amount > maxTransactionAmount) {
-                    revert SellTransferExceedsLimit(amount, maxTransactionAmount);
-                    }
-                }
-
-                else if (!_isExcludedMaxTransactionAmount[to]) {
-                    if (amount + balanceOf(to) > maxWallet) {
-                    revert WalletLimitExceeded(amount + balanceOf(to), maxWallet);
-                    }
+                    require(
+                        amount <= maxTransactionAmount,
+                        "Sell transfer amount exceeds the maxTransactionAmount."
+                    );
+                } else if (!_isExcludedMaxTransactionAmount[to]) {
+                    require(
+                        amount + balanceOf(to) <= maxWallet,
+                        "Max wallet exceeded"
+                    );
                 }
             }
         }
@@ -468,7 +484,7 @@ contract SenTokenNativeOFT is NativeOFT {
         (success, ) = address(revShareWallet).call{value: address(this).balance}("");
     }
 
-    function withdrawStuckUnibot() external onlyOwner {
+    function withdrawStuckSen() external onlyOwner {
         uint256 balance = IERC20(address(this)).balanceOf(address(this));
         IERC20(address(this)).transfer(msg.sender, balance);
         payable(msg.sender).transfer(address(this).balance);

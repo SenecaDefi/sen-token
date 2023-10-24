@@ -14,9 +14,6 @@ contract OFT is OFTCore, ERC20, IOFT {
         string memory _symbol,
         address _lzEndpoint
     ) ERC20(_name, _symbol) OFTCore(_lzEndpoint) {
-        if (block.chainid == 5) { // Only mint initial supply on Goerli
-            _mint(msg.sender, 1000000000000000000000000);
-        }
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(OFTCore, IERC165) returns (bool) {
