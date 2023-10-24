@@ -67,9 +67,6 @@ contract SenTokenNativeOFT is NativeOFT {
     // could be subject to a maximum transfer amount
     mapping(address => bool) public automatedMarketMakerPairs;
 
-    bool public preMigrationPhase = true;
-    mapping(address => bool) public preMigrationTransferrable;
-
     event UpdateUniswapV2Router(
         address indexed newAddress,
         address indexed oldAddress
@@ -94,7 +91,6 @@ contract SenTokenNativeOFT is NativeOFT {
     error WalletLimitExceeded(uint256 amount, uint256 limit);              //||
     error SenderBlacklisted(address sender);                               //||
     error ReceiverBlacklisted(address receiver);                           //||
-    error UnauthorizedPreMigrationTransfer(address from);                  //||
     error InvalidTokenAddress(address token);                              //||
     error SellTransferExceedsLimit(uint256 amount, uint256 limit);         //||
     error SellFeeTooHigh(uint256 fee);                                     //||
@@ -294,10 +290,6 @@ contract SenTokenNativeOFT is NativeOFT {
         require(to != address(0), "ERC20: transfer to the zero address");
         require(!blacklisted[from],"Sender blacklisted");
         require(!blacklisted[to],"Receiver blacklisted");
-
-        if (preMigrationPhase) {
-            require(preMigrationTransferrable[from], "Not authorized to transfer pre-migration.");
-        }
 
         if (amount == 0) {
             super._transfer(from, to, 0);
