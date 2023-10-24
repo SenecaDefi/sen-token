@@ -16,7 +16,7 @@ import "./interfaces/UniswapAndSafeMath.sol";
 /**
  * @title SEN
  * @author blockchainPhysicst
- * @notice SEN inherits from OFTWithFee, which enables SEN to create a Layer Zero bridge to other chains for the SEN token in the future
+ * @notice SEN inherits from OFT, which enables SEN to create a Layer Zero bridge to other chains for the SEN token in the future
  * @notice addresses are given mint allowances, which can be used to mint SEN tokens
  */
 
