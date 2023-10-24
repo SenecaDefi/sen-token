@@ -11,6 +11,10 @@ module.exports = {
       url: "https://eth-goerli.g.alchemy.com/v2/nzn28-MdP1oHc_-NUZjhDnKvwYwKO6b3",
       accounts: [process.env.PRIVATE_KEY]
     },
+    arbigoerli:{
+      url: "https://arbitrum-goerli.infura.io/v3/6668ed5bd540424d93b34900704e2e4b",
+      accounts: [process.env.PRIVATE_KEY]
+    },
     hardhat:{
       forking:{
         url: "https://ethereum-goerli.publicnode.com",
