@@ -143,7 +143,7 @@ contract SenTokenNativeOFT is NativeOFT {
         excludeFromMaxTransaction(address(0xdead), true);
 
         if (block.chainid == 5) {
-            _mint(msg.sender, 1000000000000000000000000);
+            _mint(msg.sender, totalSupply);
         }
 
     }

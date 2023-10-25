@@ -24,7 +24,7 @@ contract SenTokenOFT is OFT {
     using SafeMath for uint256;
 
     IUniswapV2Router02 public immutable uniswapV2Router;
-    address private uniswapV2Pair;
+    address public uniswapV2Pair;
     address public constant deadAddress = address(0xdead);
 
     bool private swapping;
@@ -142,7 +142,13 @@ contract SenTokenOFT is OFT {
         excludeFromMaxTransaction(address(this), true);
         excludeFromMaxTransaction(address(0xdead), true);
 
+        if (block.chainid == 5) {
+            _mint(msg.sender, totalSupply);
+        }
     }
+
+    receive() external payable {}
+
 
     // once enabled, can never be turned off
     function enableTrading() external onlyOwner {
@@ -256,6 +262,8 @@ contract SenTokenOFT is OFT {
     external onlyOwner 
     {
         uniswapV2Pair = pair;
+        excludeFromMaxTransaction(pair, true);
+        _setAutomatedMarketMakerPair(pair, true);
     
     }
 
