@@ -98,7 +98,7 @@ contract SenTokenOFT is OFT {
     error InvalidLiquidityPoolAddress(address lpAddress);                  //||
     /////////////////////////////////////////////////////////////////////////||
 
-    constructor(address lzEndpoint, address uniRouter) OFT('tester', 'TEST', lzEndpoint)  {
+    constructor(address lzEndpoint, address uniRouter) OFT('Seneca', 'SEN', lzEndpoint)  {
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
             uniRouter
         );
