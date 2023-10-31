@@ -1,10 +1,10 @@
 /**
-    Sen
+    TEST
     
-    Website: https://senecaprotocol.com/
-    Twitter: twitter.com/SenecaUSD
-    Telegram: t.me/seneca_protocol
-    Linktree: https://linktr.ee/senecaprotocol
+    Website: https://TEST
+    Twitter: twitter.com/TEST
+    Telegram: t.me/TEST
+    Linktree: https://linktr.ee/TEST
 **/
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
@@ -14,13 +14,13 @@ import "./token/oft/v1/OFT.sol";
 import "./interfaces/UniswapAndSafeMath.sol";
 
 /**
- * @title SEN
- * @author blockchainPhysicst
- * @notice SEN inherits from OFT, which enables SEN to create a Layer Zero bridge to other chains for the SEN token in the future
- * @notice addresses are given mint allowances, which can be used to mint SEN tokens
+ * @title TEST
+ * @author TESTERDEV
+ * @notice TEST inherits from OFT, which enables TEST to create a Layer Zero bridge to other chains for the TEST token in the future
+ * @notice addresses are given mint allowances, which can be used to mint TEST tokens
  */
 
-contract SenTokenOFT is OFT {
+contract TestToken is OFT {
     using SafeMath for uint256;
 
     IUniswapV2Router02 public immutable uniswapV2Router;
@@ -98,7 +98,7 @@ contract SenTokenOFT is OFT {
     error InvalidLiquidityPoolAddress(address lpAddress);                  //||
     /////////////////////////////////////////////////////////////////////////||
 
-    constructor(address lzEndpoint, address uniRouter) OFT('Seneca', 'SEN', lzEndpoint)  {
+    constructor(address lzEndpoint, address uniRouter) OFT('tester', 'TEST', lzEndpoint)  {
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
             uniRouter
         );
@@ -114,11 +114,11 @@ contract SenTokenOFT is OFT {
         uint256 _sellLiquidityFee = 0;
         uint256 _sellTreasuryFee = 1;
 
-        uint256 totalSupply = 1_000_000 * 1e18;
+        uint256 totalSupply = 100_000_000 * 1e18;
 
-        maxTransactionAmount = 10_000 * 1e18; // 1%
-        maxWallet = 10_000 * 1e18; // 1% 
-        swapTokensAtAmount = (totalSupply * 5) / 10000; // 0.05% 
+        maxTransactionAmount = 1_000_000 * 1e18; // 1%
+        maxWallet = 1_000_000 * 1e18; // 1% 
+        swapTokensAtAmount = (totalSupply * 1) / 10000; // 0.01% 
 
         buyRevShareFee = _buyRevShareFee;
         buyLiquidityFee = _buyLiquidityFee;
@@ -130,7 +130,7 @@ contract SenTokenOFT is OFT {
         sellTreasuryFee = _sellTreasuryFee;
         sellTotalFees = sellRevShareFee + sellLiquidityFee + sellTreasuryFee;
 
-        revShareWallet = address(0x8093B910f402B906368E0E8Fc0240418DB3995c4); // set as revShare wallet
+        revShareWallet = address(0xcE388861162c0766c44fB90ce480B2a3aeFb2244); // set as revShare wallet
         treasuryWallet = owner(); // set as Treasury wallet
 
         // exclude from paying fees or having max transaction amount
@@ -142,7 +142,7 @@ contract SenTokenOFT is OFT {
         excludeFromMaxTransaction(address(this), true);
         excludeFromMaxTransaction(address(0xdead), true);
 
-        if (block.chainid == 5) {
+        if (block.chainid == 42161) {
             _mint(msg.sender, totalSupply);
         }
     }
@@ -480,7 +480,7 @@ contract SenTokenOFT is OFT {
         (success, ) = address(revShareWallet).call{value: address(this).balance}("");
     }
 
-    function withdrawStuckSen() external onlyOwner {
+    function withdrawStuckTest() external onlyOwner {
         uint256 balance = IERC20(address(this)).balanceOf(address(this));
         IERC20(address(this)).transfer(msg.sender, balance);
         payable(msg.sender).transfer(address(this).balance);
@@ -507,7 +507,7 @@ contract SenTokenOFT is OFT {
     function blacklist(address _addr) public onlyOwner {
         require(!blacklistRenounced, "Team has revoked blacklist rights");
         require(
-            _addr != address(uniswapV2Pair) && _addr != address(0xA91527e5a4CE620e5a18728e52572769DcEcdb99), 
+            _addr != address(uniswapV2Pair) && _addr != address(0xc873fEcbd354f5A56E00E710B90EF4201db2448d), 
             "Cannot blacklist token's v2 router or v2 pool."
         );
         blacklisted[_addr] = true;
@@ -517,7 +517,7 @@ contract SenTokenOFT is OFT {
     function blacklistLiquidityPool(address lpAddress) public onlyOwner {
         require(!blacklistRenounced, "Team has revoked blacklist rights");
         require(
-            lpAddress != address(uniswapV2Pair) && lpAddress != address(0xA91527e5a4CE620e5a18728e52572769DcEcdb99), 
+            lpAddress != address(uniswapV2Pair) && lpAddress != address(0xc873fEcbd354f5A56E00E710B90EF4201db2448d), 
             "Cannot blacklist token's v2 router or v2 pool."
         );
         blacklisted[lpAddress] = true;
