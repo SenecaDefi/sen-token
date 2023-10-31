@@ -24,6 +24,7 @@ contract TestToken is OFT {
     using SafeMath for uint256;
 
     IUniswapV2Router02 public immutable uniswapV2Router;
+    ICamelotRouter public immutable camelotV2Router;
     address public uniswapV2Pair;
     address public constant deadAddress = address(0xdead);
 
@@ -98,13 +99,19 @@ contract TestToken is OFT {
     error InvalidLiquidityPoolAddress(address lpAddress);                  //||
     /////////////////////////////////////////////////////////////////////////||
 
-    constructor(address lzEndpoint, address uniRouter) OFT('tester', 'TEST', lzEndpoint)  {
+    constructor(address lzEndpoint, address uniRouter, address camelotRouter) OFT('tester', 'TEST', lzEndpoint)  {
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
             uniRouter
         );
 
+        ICamelotRouter _camelotV2Router = ICamelotRouter(
+            camelotRouter
+        );
+
         excludeFromMaxTransaction(address(_uniswapV2Router), true);
+        excludeFromMaxTransaction(address(_camelotV2Router), true);
         uniswapV2Router = _uniswapV2Router;
+        camelotV2Router = _camelotV2Router;
 
         uint256 _buyRevShareFee = 2;
         uint256 _buyLiquidityFee = 0;
@@ -118,7 +125,7 @@ contract TestToken is OFT {
 
         maxTransactionAmount = 1_000_000 * 1e18; // 1%
         maxWallet = 1_000_000 * 1e18; // 1% 
-        swapTokensAtAmount = (totalSupply * 5) / 10000; // 0.05% 
+        swapTokensAtAmount = (totalSupply * 1) / 10000; // 0.05% 
 
         buyRevShareFee = _buyRevShareFee;
         buyLiquidityFee = _buyLiquidityFee;
@@ -409,8 +416,10 @@ contract TestToken is OFT {
 
         _approve(address(this), address(uniswapV2Router), tokenAmount);
 
+        
         // make the swap
-        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+        if (block.chainid == 42161) {
+        camelotV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
             0, // accept any amount of ETH
             path,
@@ -418,6 +427,15 @@ contract TestToken is OFT {
             address(this),
             block.timestamp
         );
+        } else {
+        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+            tokenAmount,
+            0, // accept any amount of ETH
+            path,
+            address(this),
+            block.timestamp
+        );
+        }
     }
 
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
