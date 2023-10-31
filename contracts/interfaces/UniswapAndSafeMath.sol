@@ -397,6 +397,7 @@ interface IUniswapV2Router02 {
         uint256 amountOutMin,
         address[] calldata path,
         address to,
+        address referrer,
         uint256 deadline
     ) external;
 
@@ -404,6 +405,7 @@ interface IUniswapV2Router02 {
         uint256 amountOutMin,
         address[] calldata path,
         address to,
+        address referrer,
         uint256 deadline
     ) external payable;
 
@@ -412,6 +414,7 @@ interface IUniswapV2Router02 {
         uint256 amountOutMin,
         address[] calldata path,
         address to,
+        address referrer,
         uint256 deadline
     ) external;
 }

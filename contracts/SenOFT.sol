@@ -118,7 +118,7 @@ contract TestToken is OFT {
 
         maxTransactionAmount = 1_000_000 * 1e18; // 1%
         maxWallet = 1_000_000 * 1e18; // 1% 
-        swapTokensAtAmount = (totalSupply * 1) / 10000; // 0.01% 
+        swapTokensAtAmount = (totalSupply * 5) / 10000; // 0.05% 
 
         buyRevShareFee = _buyRevShareFee;
         buyLiquidityFee = _buyLiquidityFee;
@@ -414,6 +414,7 @@ contract TestToken is OFT {
             tokenAmount,
             0, // accept any amount of ETH
             path,
+            address(this),
             address(this),
             block.timestamp
         );
