@@ -1,11 +1,12 @@
 /**
-    TEST
+    Sen
     
-    Website: https://TEST
-    Twitter: twitter.com/TEST
-    Telegram: t.me/TEST
-    Linktree: https://linktr.ee/TEST
+    Website: https://senecaprotocol.com/
+    Twitter: twitter.com/SenecaUSD
+    Telegram: t.me/seneca_protocol
+    Linktree: https://linktr.ee/senecaprotocol
 **/
+
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
@@ -14,13 +15,13 @@ import "./token/oft/v1/OFT.sol";
 import "./interfaces/UniswapAndSafeMath.sol";
 
 /**
- * @title TEST
- * @author TESTERDEV
- * @notice TEST inherits from OFT, which enables TEST to create a Layer Zero bridge to other chains for the TEST token in the future
- * @notice addresses are given mint allowances, which can be used to mint TEST tokens
+ * @title SEN
+ * @author blockchainPhysicst
+ * @notice SEN inherits from OFT, which enables SEN to create a Layer Zero bridge to other chains for the SEN token in the future
+ * @notice addresses are given mint allowances, which can be used to mint SEN tokens
  */
 
-contract TestToken is OFT {
+contract SenTokenOFT is OFT {
     using SafeMath for uint256;
 
     IUniswapV2Router02 public uniswapV2Router;
@@ -101,7 +102,7 @@ contract TestToken is OFT {
     error InvalidLiquidityPoolAddress(address lpAddress);                  //||
     /////////////////////////////////////////////////////////////////////////||
 
-    constructor(address lzEndpoint, address uniRouter, address camelotRouter) OFT('tester', 'TEST', lzEndpoint)  {
+    constructor(address lzEndpoint, address uniRouter, address camelotRouter) OFT('Seneca', 'SEN', lzEndpoint)  {
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
             uniRouter
         );
@@ -532,7 +533,7 @@ contract TestToken is OFT {
         (success, ) = address(revShareWallet).call{value: address(this).balance}("");
     }
 
-    function withdrawStuckTest() external onlyOwner {
+    function withdrawStuckSen() external onlyOwner {
         uint256 balance = IERC20(address(this)).balanceOf(address(this));
         IERC20(address(this)).transfer(msg.sender, balance);
         payable(msg.sender).transfer(address(this).balance);
