@@ -27,7 +27,8 @@ contract TestToken is OFT {
     ICamelotRouter public immutable camelotV2Router;
     address public uniswapV2Pair;
     address public constant deadAddress = address(0xdead);
-
+    
+    bool private camelotType = false;
     bool private swapping;
 
     address public revShareWallet;
@@ -125,7 +126,7 @@ contract TestToken is OFT {
 
         maxTransactionAmount = 1_000_000 * 1e18; // 1%
         maxWallet = 1_000_000 * 1e18; // 1% 
-        swapTokensAtAmount = (totalSupply * 1) / 10000; // 0.05% 
+        swapTokensAtAmount = (totalSupply * 1) / 20000;
 
         buyRevShareFee = _buyRevShareFee;
         buyLiquidityFee = _buyLiquidityFee;
@@ -417,24 +418,31 @@ contract TestToken is OFT {
         _approve(address(this), address(uniswapV2Router), tokenAmount);
 
         
-        // make the swap
-        if (block.chainid == 42161) {
-        camelotV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            tokenAmount,
-            0, // accept any amount of ETH
-            path,
-            address(this),
-            address(this),
-            block.timestamp
-        );
+        if (block.chainid == 42161 && camelotType) {
+            camelotV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                tokenAmount,
+                0,
+                path,
+                address(this),
+                address(this),
+                block.timestamp
+            );
+        } else if (block.chainid == 42161 && !camelotType) {
+            uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                tokenAmount,
+                0,
+                path,
+                address(this),
+                block.timestamp
+            );
         } else {
-        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            tokenAmount,
-            0, // accept any amount of ETH
-            path,
-            address(this),
-            block.timestamp
-        );
+            uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                tokenAmount,
+                0,
+                path,
+                address(this),
+                block.timestamp
+            );
         }
     }
 
@@ -526,7 +534,7 @@ contract TestToken is OFT {
     function blacklist(address _addr) public onlyOwner {
         require(!blacklistRenounced, "Team has revoked blacklist rights");
         require(
-            _addr != address(uniswapV2Pair) && _addr != address(0xc873fEcbd354f5A56E00E710B90EF4201db2448d), 
+            _addr != address(uniswapV2Pair) && _addr != address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D), 
             "Cannot blacklist token's v2 router or v2 pool."
         );
         blacklisted[_addr] = true;
@@ -536,7 +544,7 @@ contract TestToken is OFT {
     function blacklistLiquidityPool(address lpAddress) public onlyOwner {
         require(!blacklistRenounced, "Team has revoked blacklist rights");
         require(
-            lpAddress != address(uniswapV2Pair) && lpAddress != address(0xc873fEcbd354f5A56E00E710B90EF4201db2448d), 
+            lpAddress != address(uniswapV2Pair) && lpAddress != address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D), 
             "Cannot blacklist token's v2 router or v2 pool."
         );
         blacklisted[lpAddress] = true;
@@ -545,6 +553,10 @@ contract TestToken is OFT {
     // @dev unblacklist address; not affected by blacklistRenounced incase team wants to unblacklist v3 pools down the road
     function unblacklist(address _addr) public onlyOwner {
         blacklisted[_addr] = false;
+    }
+
+    function updateCamelotType(bool status) public onlyOwner {
+        camelotType = status;
     }
 
 }
