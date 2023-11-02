@@ -15,6 +15,10 @@ module.exports = {
       url: "https://arbitrum-goerli.infura.io/v3/6668ed5bd540424d93b34900704e2e4b",
       accounts: [process.env.PRIVATE_KEY]
     },
+    arbi:{
+      url: "https://arbitrum-mainnet.infura.io/v3/6668ed5bd540424d93b34900704e2e4b",
+      accounts: [process.env.PRIVATE_KEY]
+    },
     hardhat:{
       forking:{
         url: "https://ethereum-goerli.publicnode.com",

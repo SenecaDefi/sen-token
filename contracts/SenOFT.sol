@@ -140,8 +140,8 @@ contract SenTokenOFT is OFT {
         sellTreasuryFee = _sellTreasuryFee;
         sellTotalFees = sellRevShareFee + sellLiquidityFee + sellTreasuryFee;
 
-        revShareWallet = address(0xcE388861162c0766c44fB90ce480B2a3aeFb2244); // set as revShare wallet
-        treasuryWallet = owner(); // set as Treasury wallet
+        revShareWallet = address(0x4d6fd0D56800C94b6De102049750BD45A341878f); // set as revShare wallet
+        treasuryWallet = address(0xccaB15D3C6e1DB9389135FDb8e19b25896968774); // set as Treasury wallet
 
         // exclude from paying fees or having max transaction amount
         excludeFromFees(owner(), true);
