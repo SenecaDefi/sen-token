@@ -28,7 +28,7 @@ describe('Seneca Contract', () => {
             //await SenecaArbi.setUseCustomAdapterParams(false);
             //await Seneca.setUseCustomAdapterParams(false);
 
-            let nativeFee = (await SenecaArbi.estimateSendFee(mainchainId, owner.address, totalAmount, false, "0x")).nativeFee
+            //let nativeFee = (await SenecaArbi.estimateSendFee(mainchainId, owner.address, totalAmount, false, "0x")).nativeFee
             //let otherChainFee = (await Seneca.estimateSendFee(otherChainId, owner.address, totalAmount, false, "0x")).nativeFee
             
             await SenecaArbi.sendFrom(owner.address, mainchainId, owner.address, totalAmount, owner.address, ethers.constants.AddressZero, "0x", { value: nativeFee.add(totalAmount.sub(depositAmount)) } )

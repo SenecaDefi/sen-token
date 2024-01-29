@@ -4,9 +4,9 @@ const fs = require('fs');
 
 async function main() {
 
-  const sen = await hre.ethers.getContractFactory("TestToken");
+  const sen = await hre.ethers.getContractFactory("SenTokenOFT");
   console.log('Deploying Seneca...')
-  const Seneca = await sen.deploy('0x3c2269811836af69497E5F486A85D7316753cf62', '0xc873fEcbd354f5A56E00E710B90EF4201db2448d');
+  const Seneca = await sen.deploy('0xbfD2135BFfbb0B5378b56643c2Df8a87552Bfa23', '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D');
   console.log('deployed', Seneca.address);
 
 }
