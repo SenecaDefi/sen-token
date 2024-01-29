@@ -6,6 +6,7 @@
     Telegram: t.me/seneca_protocol
     Linktree: https://linktr.ee/senecaprotocol
 **/
+
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
@@ -23,10 +24,12 @@ import "./interfaces/UniswapAndSafeMath.sol";
 contract SenTokenOFT is OFT {
     using SafeMath for uint256;
 
-    IUniswapV2Router02 public immutable uniswapV2Router;
+    IUniswapV2Router02 public uniswapV2Router;
+    ICamelotRouter public camelotV2Router;
     address public uniswapV2Pair;
+    address public camelotV2Pair;
     address public constant deadAddress = address(0xdead);
-
+    
     bool private swapping;
 
     address public revShareWallet;
@@ -66,6 +69,7 @@ contract SenTokenOFT is OFT {
     // store addresses that a automatic market maker pairs. Any transfer *to* these addresses
     // could be subject to a maximum transfer amount
     mapping(address => bool) public automatedMarketMakerPairs;
+    mapping(address => bool) public isCamelotPair;
 
     event UpdateUniswapV2Router(
         address indexed newAddress,
@@ -98,13 +102,19 @@ contract SenTokenOFT is OFT {
     error InvalidLiquidityPoolAddress(address lpAddress);                  //||
     /////////////////////////////////////////////////////////////////////////||
 
-    constructor(address lzEndpoint, address uniRouter) OFT('Seneca', 'SEN', lzEndpoint)  {
+    constructor(address lzEndpoint, address uniRouter, address camelotRouter) OFT('Seneca', 'SEN', lzEndpoint)  {
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
             uniRouter
         );
 
+        ICamelotRouter _camelotV2Router = ICamelotRouter(
+            camelotRouter
+        );
+
         excludeFromMaxTransaction(address(_uniswapV2Router), true);
+        excludeFromMaxTransaction(address(_camelotV2Router), true);
         uniswapV2Router = _uniswapV2Router;
+        camelotV2Router = _camelotV2Router;
 
         uint256 _buyRevShareFee = 2;
         uint256 _buyLiquidityFee = 0;
@@ -114,11 +124,11 @@ contract SenTokenOFT is OFT {
         uint256 _sellLiquidityFee = 0;
         uint256 _sellTreasuryFee = 1;
 
-        uint256 totalSupply = 1_000_000 * 1e18;
+        uint256 totalSupply = 100_000_000 * 1e18;
 
-        maxTransactionAmount = 10_000 * 1e18; // 1%
-        maxWallet = 10_000 * 1e18; // 1% 
-        swapTokensAtAmount = (totalSupply * 5) / 10000; // 0.05% 
+        maxTransactionAmount = 1_000_000 * 1e18; // 1%
+        maxWallet = 1_000_000 * 1e18; // 1% 
+        swapTokensAtAmount = (totalSupply * 1) / 100000;
 
         buyRevShareFee = _buyRevShareFee;
         buyLiquidityFee = _buyLiquidityFee;
@@ -130,8 +140,8 @@ contract SenTokenOFT is OFT {
         sellTreasuryFee = _sellTreasuryFee;
         sellTotalFees = sellRevShareFee + sellLiquidityFee + sellTreasuryFee;
 
-        revShareWallet = address(0x8093B910f402B906368E0E8Fc0240418DB3995c4); // set as revShare wallet
-        treasuryWallet = owner(); // set as Treasury wallet
+        revShareWallet = address(0x9f9fD9d0549637F50F921cA38b59144E8254e214); // set as revShare wallet
+        treasuryWallet = address(0x9f9fD9d0549637F50F921cA38b59144E8254e214); // set as Treasury wallet
 
         // exclude from paying fees or having max transaction amount
         excludeFromFees(owner(), true);
@@ -247,7 +257,7 @@ contract SenTokenOFT is OFT {
         emit ExcludeFromFees(account, excluded);
     }
 
-    function setAutomatedMarketMakerPair(address pair, bool value) 
+    function setAutomatedMarketMakerPair(address pair, bool value, bool isCamelotType) 
     external onlyOwner 
     {
 
@@ -255,16 +265,33 @@ contract SenTokenOFT is OFT {
         revert PairCannotBeRemoved(pair, uniswapV2Pair);
     }
 
-    _setAutomatedMarketMakerPair(pair, value);
+    if (pair == camelotV2Pair) {
+        revert PairCannotBeRemoved(pair, camelotV2Pair);
     }
 
-    function setUniswapV2Pair(address pair) 
+    _setAutomatedMarketMakerPair(pair, value);
+
+    if(isCamelotType){
+        isCamelotPair[pair] = true;
+    } else {
+        isCamelotPair[pair] = false;
+    }
+    }
+
+    function setUniswapV2Pair(address pair)
     external onlyOwner 
     {
         uniswapV2Pair = pair;
         excludeFromMaxTransaction(pair, true);
         _setAutomatedMarketMakerPair(pair, true);
-    
+        isCamelotPair[pair] = false;
+    }
+
+    function setCamelotV2Pair(address pair) external onlyOwner {
+        camelotV2Pair = pair;
+        excludeFromMaxTransaction(pair, true);
+        _setAutomatedMarketMakerPair(pair, true);
+        isCamelotPair[pair] = true;
     }
 
     function _setAutomatedMarketMakerPair(address pair, bool value) private {
@@ -294,6 +321,7 @@ contract SenTokenOFT is OFT {
         require(to != address(0), "ERC20: transfer to the zero address");
         require(!blacklisted[from],"Sender blacklisted");
         require(!blacklisted[to],"Receiver blacklisted");
+        bool checkPairSource = false;
 
         if (amount == 0) {
             super._transfer(from, to, 0);
@@ -351,6 +379,12 @@ contract SenTokenOFT is OFT {
 
         bool canSwap = contractTokenBalance >= swapTokensAtAmount;
 
+        if(isCamelotPair[from] || isCamelotPair[to]) {
+            checkPairSource = true;
+        } else {
+            checkPairSource = false;
+        }
+
         if (
             canSwap &&
             swapEnabled &&
@@ -361,7 +395,7 @@ contract SenTokenOFT is OFT {
         ) {
             swapping = true;
 
-            swapBack();
+            swapBack(checkPairSource);
 
             swapping = false;
         }
@@ -401,7 +435,7 @@ contract SenTokenOFT is OFT {
         super._transfer(from, to, amount);
     }
 
-    function swapTokensForEth(uint256 tokenAmount) private {
+    function swapTokensForEth(uint256 tokenAmount, bool camelotSource) private {
         // generate the uniswap pair path of token -> weth
         address[] memory path = new address[](2);
         path[0] = address(this);
@@ -409,14 +443,33 @@ contract SenTokenOFT is OFT {
 
         _approve(address(this), address(uniswapV2Router), tokenAmount);
 
-        // make the swap
-        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            tokenAmount,
-            0, // accept any amount of ETH
-            path,
-            address(this),
-            block.timestamp
-        );
+        
+        if (block.chainid == 42161 && camelotSource) {
+            camelotV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                tokenAmount,
+                0,
+                path,
+                address(this),
+                address(this),
+                block.timestamp
+            );
+        } else if (block.chainid == 42161 && !camelotSource) {
+            uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                tokenAmount,
+                0,
+                path,
+                address(this),
+                block.timestamp
+            );
+        } else {
+            uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                tokenAmount,
+                0,
+                path,
+                address(this),
+                block.timestamp
+            );
+        }
     }
 
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
@@ -434,7 +487,7 @@ contract SenTokenOFT is OFT {
         );
     }
 
-    function swapBack() private {
+    function swapBack(bool sourcePairIsCamelot) private {
         uint256 contractBalance = balanceOf(address(this));
         uint256 totalTokensToSwap = tokensForLiquidity +
             tokensForRevShare +
@@ -457,7 +510,7 @@ contract SenTokenOFT is OFT {
 
         uint256 initialETHBalance = address(this).balance;
 
-        swapTokensForEth(amountToSwapForETH);
+        swapTokensForEth(amountToSwapForETH, sourcePairIsCamelot);
 
         uint256 ethBalance = address(this).balance.sub(initialETHBalance);
 
@@ -507,7 +560,7 @@ contract SenTokenOFT is OFT {
     function blacklist(address _addr) public onlyOwner {
         require(!blacklistRenounced, "Team has revoked blacklist rights");
         require(
-            _addr != address(uniswapV2Pair) && _addr != address(0xA91527e5a4CE620e5a18728e52572769DcEcdb99), 
+            _addr != address(uniswapV2Pair) && _addr != address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D), 
             "Cannot blacklist token's v2 router or v2 pool."
         );
         blacklisted[_addr] = true;
@@ -517,7 +570,7 @@ contract SenTokenOFT is OFT {
     function blacklistLiquidityPool(address lpAddress) public onlyOwner {
         require(!blacklistRenounced, "Team has revoked blacklist rights");
         require(
-            lpAddress != address(uniswapV2Pair) && lpAddress != address(0xA91527e5a4CE620e5a18728e52572769DcEcdb99), 
+            lpAddress != address(uniswapV2Pair) && lpAddress != address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D), 
             "Cannot blacklist token's v2 router or v2 pool."
         );
         blacklisted[lpAddress] = true;
@@ -526,6 +579,14 @@ contract SenTokenOFT is OFT {
     // @dev unblacklist address; not affected by blacklistRenounced incase team wants to unblacklist v3 pools down the road
     function unblacklist(address _addr) public onlyOwner {
         blacklisted[_addr] = false;
+    }
+
+    function updateUniswapRouter(IUniswapV2Router02 newUniRouter) public onlyOwner {
+        uniswapV2Router = newUniRouter;
+    }
+
+    function updateCamelotRouter(ICamelotRouter newCamelotRouter) public onlyOwner {
+        camelotV2Router = newCamelotRouter;
     }
 
 }

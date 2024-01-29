@@ -31,12 +31,12 @@ describe('Seneca Contract', () => {
             //let nativeFee = (await SenecaArbi.estimateSendFee(mainchainId, owner.address, totalAmount, false, "0x")).nativeFee
             //let otherChainFee = (await Seneca.estimateSendFee(otherChainId, owner.address, totalAmount, false, "0x")).nativeFee
             
-            //await SenecaArbi.sendFrom(owner.address, mainchainId, owner.address, totalAmount, owner.address, ethers.constants.AddressZero, "0x", { value: nativeFee.add(totalAmount.sub(depositAmount)) } )
+            await SenecaArbi.sendFrom(owner.address, mainchainId, owner.address, totalAmount, owner.address, ethers.constants.AddressZero, "0x", { value: nativeFee.add(totalAmount.sub(depositAmount)) } )
             //await SenecaArbi.enableTrading();
             //await Seneca.enableTrading();
             // await Seneca.removeLimits();
             //await Seneca.transfer('0xe433CF97Fe2638A212Ce7F6Bf095F71383a5C9A6', parseUnits('10', 18));
-            await Seneca.setUniswapV2Pair('0x17f5761E749D05e822f8EEbaB9fbF8959a1ecA25');
+            //await Seneca.setUniswapV2Pair('0x17f5761E749D05e822f8EEbaB9fbF8959a1ecA25');
             return {
                owner, addr1, addr2, addr3, Seneca, 
             };

@@ -6,7 +6,7 @@ async function main() {
 
   const sen = await hre.ethers.getContractFactory("SenTokenOFT");
   console.log('Deploying Seneca...')
-  const Seneca = await sen.deploy('0xbfD2135BFfbb0B5378b56643c2Df8a87552Bfa23', '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D');
+  const Seneca = await sen.deploy('0xbfD2135BFfbb0B5378b56643c2Df8a87552Bfa23', '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D');
   console.log('deployed', Seneca.address);
 
 }

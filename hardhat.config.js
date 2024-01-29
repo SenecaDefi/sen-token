@@ -4,7 +4,7 @@ require('dotenv').config();
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   etherscan: {
-    apiKey: "8143XKS22PEPU2HRFGT2MY34JRE4XFYHSN",
+    apiKey: "CII2ICK5C9QTN6BJ8T4DFB8ACV1WSHVNCT",
   },
   networks:{
     goerli:{
@@ -13,6 +13,10 @@ module.exports = {
     },
     arbigoerli:{
       url: "https://arbitrum-goerli.infura.io/v3/6668ed5bd540424d93b34900704e2e4b",
+      accounts: [process.env.PRIVATE_KEY]
+    },
+    arbi:{
+      url: "https://arbitrum-mainnet.infura.io/v3/6668ed5bd540424d93b34900704e2e4b",
       accounts: [process.env.PRIVATE_KEY]
     },
     hardhat:{
@@ -29,7 +33,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 200,
           },
         },
       },
@@ -39,6 +43,15 @@ module.exports = {
           optimizer: {
             enabled: true,
             runs: 1,
+          },
+        },
+      },
+      {
+        version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
           },
         },
       },
