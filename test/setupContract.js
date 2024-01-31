@@ -11,11 +11,11 @@ describe('Seneca Contract', () => {
         it('it should make a call to contract with no reverts', async () => {
             const [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
-            const sen = await ethers.getContractAt("SenTokenOFT", '0x813706a5B9AD2eb4D7d021CD5C7e2684CFBD5b3E');
-            const Seneca = sen.attach('0x813706a5B9AD2eb4D7d021CD5C7e2684CFBD5b3E');
+            const sen = await ethers.getContractAt("SenTokenOFT", '0x8de6aEe2226C6C176461B05f49d293eeb05A788d');
+            const Seneca = sen.attach('0x8de6aEe2226C6C176461B05f49d293eeb05A788d');
 
-            const senarb = await ethers.getContractAt("SenTokenOFT", '0xe3ab450F05a946Beb89F2f9808A2beB5B905aa47');
-            const SenecaArbi = senarb.attach('0xe3ab450F05a946Beb89F2f9808A2beB5B905aa47');
+            const senarb = await ethers.getContractAt("SenTokenOFT", '0x0A9B14d6DC37219dD56320Afb2A5eff090784572');
+            const SenecaArbi = senarb.attach('0x0A9B14d6DC37219dD56320Afb2A5eff090784572');
             
             const otherChainId = 10143;
             const mainchainId = 10121;

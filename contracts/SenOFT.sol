@@ -140,8 +140,8 @@ contract SenTokenOFT is OFT {
         sellTreasuryFee = _sellTreasuryFee;
         sellTotalFees = sellRevShareFee + sellLiquidityFee + sellTreasuryFee;
 
-        revShareWallet = address(0x9f9fD9d0549637F50F921cA38b59144E8254e214); // set as revShare wallet
-        treasuryWallet = address(0x9f9fD9d0549637F50F921cA38b59144E8254e214); // set as Treasury wallet
+        revShareWallet = address(0x4d6fd0D56800C94b6De102049750BD45A341878f); // set as revShare wallet
+        treasuryWallet = address(0xccaB15D3C6e1DB9389135FDb8e19b25896968774); // set as Treasury wallet
 
         // exclude from paying fees or having max transaction amount
         excludeFromFees(owner(), true);
@@ -152,7 +152,7 @@ contract SenTokenOFT is OFT {
         excludeFromMaxTransaction(address(this), true);
         excludeFromMaxTransaction(address(0xdead), true);
 
-        if (block.chainid == 5) {
+        if (block.chainid == 42161) {
             _mint(msg.sender, totalSupply);
         }
     }

@@ -19,9 +19,17 @@ module.exports = {
       url: "https://arbitrum-mainnet.infura.io/v3/6668ed5bd540424d93b34900704e2e4b",
       accounts: [process.env.PRIVATE_KEY]
     },
+    sepolia:{
+      url: "https://eth-sepolia.g.alchemy.com/v2/j-W_w2hcb5N5cHB1Uda2rpsCv7boyJHJ",
+      accounts: [process.env.PRIVATE_KEY]
+    },
+    eth:{
+      url: "https://eth-mainnet.g.alchemy.com/v2/5EFy3aJNgy0L6J24VU_rP-LF9t3hLf8W",
+      accounts: [process.env.PRIVATE_KEY]
+    },
     hardhat:{
       forking:{
-        url: "https://ethereum-goerli.publicnode.com",
+        url: "https://eth-goerli.g.alchemy.com/v2/nzn28-MdP1oHc_-NUZjhDnKvwYwKO6b3",
         accounts: [process.env.PRIVATE_KEY]
       },
     },
